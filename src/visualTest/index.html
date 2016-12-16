@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Visual test</title>
+  <script src="../../node_modules/webcomponents.js/src/HTMLImports/HTMLImports.js"></script>
+  <script src="../../node_modules/r-visual-fixture-test/src/visual-fixture-test.js"></script>
+  <script src="https://code.highcharts.com/maps/highmaps.js"></script>
+  <script src="https://code.highcharts.com/maps/modules/data.js"></script>
+  <script src="https://code.highcharts.com/maps/modules/drilldown.js"></script>
+  <script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+  <script src="../../src/hierarchy.js"></script>
+  <script src="../../dist/drilldown-nps-map.bundle.js"></script>
+  <!--link rel="stylesheet" href="../../dist/styles.css"-->
+
+
+
+
+  <link rel="import" href="../__tests__/fixtures/ddm1.html">
+
+</head>
+<body>
+<script>
+  testFixture('ddm1', function(){
+    let map = new Reportal.DrilldownMap({hierarchy: h, containerID : 'map'})
+  });
+</script>
+</body>
+</html>
