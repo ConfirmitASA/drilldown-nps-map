@@ -185,7 +185,7 @@ class DrilldownMap {
         chart.addSingleSeriesAsDrilldown(e.point, a);
       }
       curLVL.subcells.forEach(el => {
-        if(!el.mapID)
+        if(!el.mapID && !el.coordinates)
           return;
         let a = DrilldownMap.composeSeries(el,mapData, chart);
         chart.addSingleSeriesAsDrilldown(e.point, a);
@@ -203,16 +203,6 @@ class DrilldownMap {
     Highcharts.mapChart( containerID, {
       lang: {
         drillUpText: 'Back to {series.parent}'
-      },
-      labels: {
-        items: [{
-          html: "My custom label",
-          style: {
-            left: "100px",
-            top: "100px"
-          }
-
-        }]
       },
       tooltip: {
         pointFormat: 'NPS : {point.value}'
