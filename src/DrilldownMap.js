@@ -87,7 +87,7 @@ class DrilldownMap {
   static loadMap(source){
     let map = new Promise((resolve,reject)=>{
       $.getScript('https://code.highcharts.com/mapdata/' + source + '.js', function () {
-        resolve(Highcharts.maps[source]) ;
+        resolve(Highcharts.maps[source]);
       });
     });
     return map;
@@ -169,7 +169,6 @@ class DrilldownMap {
     if(curLVL && curLVL.map){// if we have another map to load
       let map = DrilldownMap.loadMap(curLVL.map);
       map.then(mapData=>{
-        //chart.addSingleSeriesAsDrilldown(e.point,{mapData});
         DrilldownMap.addSeries(curLVL,chart,e,mapData)
       });
     } else if(curLVL && !curLVL.map){
@@ -186,6 +185,8 @@ class DrilldownMap {
         chart.addSingleSeriesAsDrilldown(e.point, a);
       }
       curLVL.subcells.forEach(el => {
+        if(!el.mapID)
+          return;
         let a = DrilldownMap.composeSeries(el,mapData, chart);
         chart.addSingleSeriesAsDrilldown(e.point, a);
       });
@@ -203,6 +204,16 @@ class DrilldownMap {
       lang: {
         drillUpText: 'Back to {series.parent}'
       },
+      labels: {
+        items: [{
+          html: "My custom label",
+          style: {
+            left: "100px",
+            top: "100px"
+          }
+
+        }]
+      },
       tooltip: {
         pointFormat: 'NPS : {point.value}'
       },
@@ -215,7 +226,7 @@ class DrilldownMap {
       colorAxis: {
         dataClasses
       },
-        mapNavigation: {
+      mapNavigation: {
         enabled: true,
       },
       chart:{
