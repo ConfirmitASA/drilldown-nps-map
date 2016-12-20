@@ -50,22 +50,19 @@ class DrilldownMap {
     };
     geojson.title = mapName;
     if (typeof countriesList === 'string'){
-      sourceMap.features.forEach(feature => {
-        if (feature.id === countriesList) {
+      sourceMap.features.reverse().forEach(feature => {
+        if (feature.properties["hc-a2"] === countriesList) {
           geojson.features.push(feature);
         }
       })
     } else if (Array.isArray(countriesList)){
       countriesList.forEach(id => {
-        sourceMap.features.forEach(feature => {
-          if (feature.id === id) {
+        sourceMap.features.reverse().forEach(feature => {
+          if (feature.properties["hc-a2"] === id) {
             geojson.features.push(feature);
           }
         })
       });
-    } else {
-      console.log(typeof countriesID);
-      throw new Error("Countries list probably missing or has corrupted data");
     }
     return geojson;
   }
@@ -73,10 +70,13 @@ class DrilldownMap {
   static addMapIDsToHierarchyLevel(hierarchy, parent = null) {
     hierarchy.forEach(el => {
       el.parent = parent;
+      if(el.parent && el.parent.map){
+        el.map = el.parent.map;
+      }
       if (el.subcells) {
         DrilldownMap.addMapIDsToHierarchyLevel(el.subcells, el);
       }
-      if(el.parent && el.mapID){
+      if(el.parent && el.mapID && !el.parent.map){
         if(!el.parent.mapID)
           el.parent.mapID = [];
         el.parent.mapID = el.parent.mapID.concat(el.mapID);
@@ -87,16 +87,18 @@ class DrilldownMap {
   static loadMap(source){
     let map = new Promise((resolve,reject)=>{
       $.getScript('https://code.highcharts.com/mapdata/' + source + '.js', function () {
-        resolve(Highcharts.geojson(Highcharts.maps[source])) ;
+        resolve(Highcharts.maps[source]) ;
       });
     });
     return map;
   }
 
   static getSeriesData(el){
-    let drilldown = el.text;
+    let drilldown;
+    el.subcells ? drilldown = el.text : drilldown = null;
     if (typeof el.mapID === 'string') {
       return [{
+        'drilldown': drilldown,
         'code': el.mapID,
         'value': 65
       }]
@@ -105,7 +107,7 @@ class DrilldownMap {
         return {
           'drilldown': drilldown,
           'code': id,
-          'value': 81
+          'value': 88
         }
       });
     } else {
@@ -121,29 +123,53 @@ class DrilldownMap {
     });
     return series;
   }
-
-  static composeSeries(el,mapData){
-    mapData = mapData || Highcharts.geojson(DrilldownMap.createCustomGeoJSON(Highcharts.maps['custom/world'], el.mapID, el.text));
-    if (el.mapID) {
-      let s = {
-        name: el.text,
-        tooltip: {
-          pointFormat: 'NPS : {point.value}'
+  static composeSeries(el,mapData,chart){
+    if(el.coordinates){
+      mapData ? chart.mapTransforms = mapData["hc-transform"] : chart.mapTransforms = Highcharts.maps["custom/world-highres2"]["hc-transform"];
+      let pos = chart.fromLatLonToPoint({ lat: el.coordinates[0], lon: el.coordinates[1] });
+      return {
+        events: {
+          // click: onclick function
         },
-        parent: el.parent.text,
-        mapData,
-        joinBy: ['hc-a2', 'code'],
-        data: DrilldownMap.getSeriesData(el)
-      };
-      return s;
+        "type": "mappoint", // or mapbubble
+        "name": el.text,
+        "marker": {
+          "lineColor": "black",
+          "lineWidth": 1,
+          "radius": 4,
+          "symbol": "circle",
+        },
+        "data": [{
+          "name": el.text,
+          "x": pos.x,
+          "y": pos.y
+        }]
+      }
+    } else {
+      mapData ? mapData = Highcharts.geojson(DrilldownMap.createCustomGeoJSON(mapData, el.mapID, el.text)) :
+        mapData = Highcharts.geojson(DrilldownMap.createCustomGeoJSON(Highcharts.maps['custom/world-highres2'], el.mapID, el.text));
+      if (el.mapID) {
+        let s = {
+          name: el.text,
+          tooltip: {
+            pointFormat: 'NPS : {point.value}'
+          },
+          allAreas: false,
+          parent: el.parent.text,
+          mapData,
+          joinBy: ['hc-a2', 'code'],
+          data: DrilldownMap.getSeriesData(el)
+        };
+        return s;
+      }
     }
   }
-
   static updateMap(curLVL, chart, e){
     curLVL = curLVL.subcells.filter( el => el.text == e.point.series.name)[0];
     if(curLVL && curLVL.map){// if we have another map to load
       let map = DrilldownMap.loadMap(curLVL.map);
       map.then(mapData=>{
+        //chart.addSingleSeriesAsDrilldown(e.point,{mapData});
         DrilldownMap.addSeries(curLVL,chart,e,mapData)
       });
     } else if(curLVL && !curLVL.map){
@@ -153,20 +179,21 @@ class DrilldownMap {
   }
 
   static addSeries(curLVL,chart,e,mapData){
-    if (curLVL.map){
-      let a = DrilldownMap.composeSeries(curLVL,mapData);
-      chart.addSeriesAsDrilldown(e.point, a);
-      return;
-    }
-    if (curLVL.subcells) {
+    if (curLVL.subcells && curLVL.isGlobal) {
+      if(!curLVL.subcells[0].isGlobal){
+        let a = DrilldownMap.composeSeries(curLVL,mapData, chart);
+        a.data.map(el => {el.drilldown = null, el.value = null});
+        chart.addSingleSeriesAsDrilldown(e.point, a);
+      }
       curLVL.subcells.forEach(el => {
-        let a = DrilldownMap.composeSeries(el,mapData);
+        let a = DrilldownMap.composeSeries(el,mapData, chart);
         chart.addSingleSeriesAsDrilldown(e.point, a);
       });
       chart.applyDrilldown();
     } else {
-      let a = DrilldownMap.composeSeries(curLVL,mapData);
-      chart.addSeriesAsDrilldown(e.point, a);
+        let a = DrilldownMap.composeSeries(curLVL, mapData, chart);
+        a.data.map(el => {el.drilldown = null, el.value = null});
+        chart.addSeriesAsDrilldown(e.point, a);
     }
   }
 
@@ -203,7 +230,7 @@ class DrilldownMap {
         }
       },
       series: DrilldownMap.initMap(curLVL,[{
-        mapData: Highcharts.maps["custom/world"]
+        mapData: Highcharts.maps["custom/world-highres2"]
       }])
     });
   }

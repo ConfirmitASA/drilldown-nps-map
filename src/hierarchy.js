@@ -76,7 +76,19 @@ let h = [
                     {
                         "text": "Japan",
                         "mapID": "JP",
-                        "isGlobal": true
+                        "isGlobal": true,
+                        "subcells":[
+                          {
+                            "text": "Tokyo",
+                            "coordinates":[35.68, 139.69],
+                            "isGlobal":false
+                          },
+                          {
+                            "text": "Kyoto",
+                            "coordinates":[35.01, 135.76],
+                            "isGlobal":false
+                          }
+                        ]
                     }
                 ]
             },
@@ -137,11 +149,20 @@ let h = [
                                         "subcells": [
                                             {
                                                 "text": "Belgium%20(Dutch)",
-                                                "isGlobal": false
+                                                "mapID": ["AN", "LI", "WB", "HA", "NA"],
+                                                "isGlobal": true
                                             },
                                             {
                                                 "text": "Belgium%20(French)",
-                                                "isGlobal": false
+                                                "mapID": ["BR", "LU", "FB", "EF", "WF"],
+                                                "isGlobal": true,
+                                                "subcells":[
+                                                  {
+                                                    "text":"Brussel",
+                                                    "coordinates":[50.85,4.35],
+                                                    "isGlobal": false
+                                                  }
+                                                ]
                                             }
                                         ]
                                     },
@@ -228,12 +249,10 @@ let h = [
                         "subcells": [
                             {
                                 "text": "South%20Africa",
-                                "mapID": "MA",
                                 "isGlobal": true
                             },
                             {
                                 "text": "UK%20Exports",
-                                "mapID": "EG",
                                 "isGlobal": true
                             },
                             {
@@ -243,7 +262,6 @@ let h = [
                             },
                             {
                                 "text": "Distributors",
-                                "mapID": "TN",
                                 "isGlobal": true
                             }
                         ]
@@ -263,9 +281,11 @@ let h = [
                             {
                                 "text": "Eastern%20Region",
                                 "isGlobal": true,
+                                "mapID":["SC", "NC", "GA", "FL", "AL", "IN", "WI", "KY", "IL"],
                                 "subcells": [
                                     {
                                         "text": "Greenville%20",
+                                        "coordinates":[34.85, -82.39],
                                         "isGlobal": false
                                     },
                                     {
@@ -313,6 +333,7 @@ let h = [
                             {
                                 "text": "Central%20Region",
                                 "isGlobal": true,
+                                "mapID":["TX", "NE", "OK", "IA", "MN", "KS","MO"],
                                 "subcells": [
                                     {
                                         "text": "Fort%20Worth%20",
@@ -369,6 +390,7 @@ let h = [
                             {
                                 "text": "Northeastern%20Region",
                                 "isGlobal": true,
+                                "mapID":["OH","NY","MI", "OH", "CT", "PA", "MA", "NJ","MD", "VA"],
                                 "subcells": [
                                     {
                                         "text": "Rochester%20",
@@ -419,6 +441,7 @@ let h = [
                             {
                                 "text": "Western%20Region",
                                 "isGlobal": true,
+                                "mapID": ["CA", "OR", "UT", "WA", "AZ", "CO"],
                                 "subcells": [
                                     {
                                         "text": "Orange%20County-Simi%20Valley%20",
