@@ -51,14 +51,14 @@ class DrilldownMap {
     geojson.title = mapName;
     if (typeof countriesList === 'string'){
       sourceMap.features.reverse().forEach(feature => {
-        if (feature.properties["hc-a2"] === countriesList) {
+        if (feature.properties["hc-key"] === countriesList) {
           geojson.features.push(feature);
         }
       })
     } else if (Array.isArray(countriesList)){
       countriesList.forEach(id => {
         sourceMap.features.reverse().forEach(feature => {
-          if (feature.properties["hc-a2"] === id) {
+          if (feature.properties["hc-key"] === id) {
             geojson.features.push(feature);
           }
         })
@@ -67,9 +67,20 @@ class DrilldownMap {
     return geojson;
   }
 
+  static initMap(obj, series = []){
+    obj.subcells.forEach( el => {
+      if (el.mapID) {
+        let s = DrilldownMap.composeSeries(el);
+        series.push(s);
+      }
+    });
+    return series;
+  }
+
   static addMapIDsToHierarchyLevel(hierarchy, parent = null) {
     hierarchy.forEach(el => {
       el.parent = parent;
+      el.value = Math.random()*100;
       if(el.parent && el.parent.map){
         el.map = el.parent.map;
       }
@@ -86,7 +97,7 @@ class DrilldownMap {
 
   static loadMap(source){
     let map = new Promise((resolve,reject)=>{
-      $.getScript('https://code.highcharts.com/mapdata/' + source + '.js', function () {
+      jQuery.getScript('https://code.highcharts.com/mapdata/' + source + '.js', function () {
         resolve(Highcharts.maps[source]);
       });
     });
@@ -100,28 +111,27 @@ class DrilldownMap {
       return [{
         'drilldown': drilldown,
         'code': el.mapID,
-        'value': 65
+        'value': el.value
       }]
     } else if (Array.isArray(el.mapID)){
       return el.mapID.map(function (id) {
         return {
           'drilldown': drilldown,
           'code': id,
-          'value': 88
+          'value': el.value
         }
       });
     } else {
       throw new Error("Data element is corrupted");
     }
   }
-
-  static initMap(obj, series = []){
-    obj.subcells.forEach( el => {
-      if (el.mapID) {
-        series.push(DrilldownMap.composeSeries(el));
-      }
-    });
-    return series;
+  static getColor(val){
+    if (val < 60)
+      return '#f44336';
+    else if (val < 80)
+      return '#ffc107';
+    else
+      return '#8bc34a';
   }
   static composeSeries(el,mapData,chart){
     if(el.coordinates){
@@ -131,18 +141,20 @@ class DrilldownMap {
         events: {
           // click: onclick function
         },
-        "type": "mappoint", // or mapbubble
-        "name": el.text,
-        "marker": {
-          "lineColor": "black",
-          "lineWidth": 1,
-          "radius": 4,
-          "symbol": "circle",
+        type: "mappoint", // or mapbubble
+        name: el.text,
+        marker: {
+          lineColor: "black",
+          lineWidth: 1,
+          radius: 4,
+          symbol: "circle",
         },
-        "data": [{
-          "name": el.text,
-          "x": pos.x,
-          "y": pos.y
+        data: [{
+          color: DrilldownMap.getColor(el.value),
+          name: el.text,
+          value: el.value,
+          x: pos.x,
+          y: pos.y
         }]
       }
     } else {
@@ -157,8 +169,8 @@ class DrilldownMap {
           allAreas: false,
           parent: el.parent.text,
           mapData,
-          joinBy: ['hc-a2', 'code'],
-          data: DrilldownMap.getSeriesData(el)
+          joinBy: ['hc-key', 'code'],
+          data: DrilldownMap.getSeriesData(el),
         };
         return s;
       }
@@ -219,14 +231,20 @@ class DrilldownMap {
       mapNavigation: {
         enabled: true,
       },
+      subtitle:{
+        align: 'right',
+        text: `Current level: ${curLVL.text}`
+      },
       chart:{
         events: {
           drilldown: function(e){
             let chart = this;
             curLVL = DrilldownMap.updateMap(curLVL, chart, e);
+            chart.subtitle.update({text: `Current region: ${curLVL.text}<br> Region NPS: ${curLVL.value}`});
           },
           drillupall: function(e){
             curLVL = curLVL.parent;
+            this.subtitle.update({text: `Current level: ${curLVL.text}`});
           }
         }
       },
