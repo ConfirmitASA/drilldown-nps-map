@@ -1,4 +1,43 @@
-import ReportalBase from "r-reportal-base";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>DrilldownMap.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrilldownMap.html">DrilldownMap</a><ul class='methods'><li data-type='method'><a href="DrilldownMap.html#.addMapIDsToHierarchyLevel">addMapIDsToHierarchyLevel</a></li><li data-type='method'><a href="DrilldownMap.html#.createCustomGeoJSON">createCustomGeoJSON</a></li><li data-type='method'><a href="DrilldownMap.html#.getColor">getColor</a></li><li data-type='method'><a href="DrilldownMap.html#.getFeatures">getFeatures</a></li><li data-type='method'><a href="DrilldownMap.html#.getSeriesData">getSeriesData</a></li><li data-type='method'><a href="DrilldownMap.html#.loadMap">loadMap</a></li><li data-type='method'><a href="DrilldownMap.html#addSeries">addSeries</a></li><li data-type='method'><a href="DrilldownMap.html#composeSeries">composeSeries</a></li><li data-type='method'><a href="DrilldownMap.html#drawMap">drawMap</a></li><li data-type='method'><a href="DrilldownMap.html#getCoordinateSeries">getCoordinateSeries</a></li><li data-type='method'><a href="DrilldownMap.html#initMap">initMap</a></li><li data-type='method'><a href="DrilldownMap.html#updateMap">updateMap</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">DrilldownMap.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import ReportalBase from "r-reportal-base";
 
 class DrilldownMap {
 
@@ -7,7 +46,7 @@ class DrilldownMap {
    * @param {Object} hierarchy - a hierarchical object for a map to be built upon
    * @param {String} containerID - id of the container the map will be drawn to
    * @param {Function} mappointCallback - executed when a mappoint (city) is clicked
-   * @param {Array.<{from:Number, to:Number, color:String, name:String}>} dataClasses - color bands for conditional formatting
+   * @param {Array.&lt;{from:Number, to:Number, color:String, name:String}>} dataClasses - color bands for conditional formatting
    * @param {Object} options - options passed to HighMap to restyle/configure it
    * */
   constructor({hierarchy, initMap="custom/world-highres2", containerID, mappointCallback, dataClasses = [{
@@ -123,13 +162,13 @@ class DrilldownMap {
     hierarchy.forEach(subcell => {
       subcell.parent = parent;
       subcell.value = Math.random()*100;
-      if(subcell.parent && subcell.parent!=null && subcell.parent.map){
+      if(subcell.parent &amp;&amp; subcell.parent!=null &amp;&amp; subcell.parent.map){
         subcell.map = subcell.parent.map;
       }
       if (subcell.subcells) {
         DrilldownMap.addMapIDsToHierarchyLevel(subcell.subcells, subcell);
       }
-      if(subcell.parent && subcell.mapID && !subcell.parent.map){
+      if(subcell.parent &amp;&amp; subcell.mapID &amp;&amp; !subcell.parent.map){
         if(!subcell.parent.mapID)
           subcell.parent.mapID = [];
         subcell.parent.mapID = subcell.parent.mapID.concat(subcell.mapID);
@@ -185,7 +224,7 @@ class DrilldownMap {
   static getColor(val, dataClasses){
     let color;
     dataClasses.forEach(dataClass =>{
-      if(val >= dataClass.from && val < dataClass.to) {
+      if(val >= dataClass.from &amp;&amp; val &lt; dataClass.to) {
         color = dataClass.color;
       }
     });
@@ -262,12 +301,12 @@ class DrilldownMap {
    */
   updateMap(curLVL, chart, e){
     curLVL = curLVL.subcells.filter( el => el.text == e.point.series.name)[0];
-    if(curLVL && curLVL.map){// if we have another map to load
+    if(curLVL &amp;&amp; curLVL.map){// if we have another map to load
       let map = DrilldownMap.loadMap(curLVL.map);
       map.then(mapData=>{
         this.addSeries(curLVL,chart,e,mapData)
       });
-    } else if(curLVL && !curLVL.map){
+    } else if(curLVL &amp;&amp; !curLVL.map){
       this.addSeries(curLVL,chart,e);
     }
     return curLVL;
@@ -281,7 +320,7 @@ class DrilldownMap {
    * @param {Object} mapData - mapData geoJSON
    */
    addSeries(curLVL,chart,e,mapData){
-    if (curLVL.subcells && curLVL.isGlobal) { // if it's an end point
+    if (curLVL.subcells &amp;&amp; curLVL.isGlobal) { // if it's an end point
       if(curLVL.subcells[0].coordinates){
         let seriesItem = this.composeSeries(curLVL,mapData, chart);
         seriesItem.data.forEach(dataItem => {
@@ -291,7 +330,7 @@ class DrilldownMap {
         chart.addSingleSeriesAsDrilldown(e.point, seriesItem);
       }
       curLVL.subcells.forEach(subcell => {
-        if(!subcell.mapID && !subcell.coordinates) return;
+        if(!subcell.mapID &amp;&amp; !subcell.coordinates) return;
 
         let seriesItem = this.composeSeries(subcell,mapData, chart);
         chart.addSingleSeriesAsDrilldown(e.point, seriesItem);
@@ -333,7 +372,7 @@ class DrilldownMap {
       },
       subtitle:{
         align: 'right',
-        text: `Current level: ${curLVL.text} <br> Region NPS: ${curLVL.value}`
+        text: `Current level: ${curLVL.text} &lt;br> Region NPS: ${curLVL.value}`
       },
       chart:{
         events: {
@@ -341,12 +380,12 @@ class DrilldownMap {
             //TODO: add data promise;
             let chart = e.target;
             curLVL = self.updateMap(curLVL, chart, e);
-            chart.subtitle.update({text: `Current region: ${curLVL.text}<br> Region NPS: ${curLVL.value}`});
+            chart.subtitle.update({text: `Current region: ${curLVL.text}&lt;br> Region NPS: ${curLVL.value}`});
           },
           drillupall: function(e){
             curLVL = curLVL.parent;
             if (curLVL)
-              chart.subtitle.update({text: `Current level: ${curLVL.text} <br> Region NPS: ${curLVL.value}`});
+              chart.subtitle.update({text: `Current level: ${curLVL.text} &lt;br> Region NPS: ${curLVL.value}`});
           }
         }
       },
@@ -360,3 +399,22 @@ class DrilldownMap {
 }
 
 export default DrilldownMap;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Thu Dec 22 2016 16:11:42 GMT+0300 (Russia TZ 2 Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
