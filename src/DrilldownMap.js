@@ -1,7 +1,6 @@
 import ReportalBase from "r-reportal-base";
 
 class DrilldownMap {
-
   /**
    * Creates a drilldown map
    * @param {Object} hierarchy - a hierarchical object for a map to be built upon
@@ -34,7 +33,6 @@ class DrilldownMap {
         throw new TypeError("mappointCallback must be a function")
       }
     }
-
     let config = this.config = ReportalBase.mixin(options, {colorAxis:{dataClasses}});
     if(typeof Highcharts == undefined){throw new Error('Highcharts must be declared. Probably they are missing')};
     if(typeof Highcharts.maps == undefined){throw new Error('HighMaps must be loaded. Probably they are missing')};
