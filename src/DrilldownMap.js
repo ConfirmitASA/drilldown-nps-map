@@ -1,6 +1,8 @@
 import ReportalBase from "r-reportal-base";
+import AsyncHierarchyTable from "r-async-hierarchy-table";
+import MapHierarchy from "./map-hierarchy";
 
-class DrilldownMap {
+class DrilldownMap extends MapHierarchy {
   /**
    * Creates a drilldown map
    * @param {Object} hierarchy - a hierarchical object for a map to be built upon
@@ -9,7 +11,7 @@ class DrilldownMap {
    * @param {Array.<{from:Number, to:Number, color:String, name:String}>} dataClasses - color bands for conditional formatting
    * @param {Object} options - options passed to HighMap to restyle/configure it
    * */
-  constructor({hierarchy, initMap="custom/world-highres2", containerID, mappointCallback, dataClasses = [{
+  constructor({hierarchy, initMap="custom/world-highres2", containerID, mappointCallback, rowheaders, hierarchyID,hierarchyControlID,pageStateID,languageCode=9,tableID, dataClasses = [{
     from: 80,
     to: 100,
     color: '#8bc34a',
@@ -26,6 +28,12 @@ class DrilldownMap {
     name: 'Detractor'
   }], options={}}={}){
 
+    this.hierarchyID= hierarchyID;
+    this.hierarchyControlID= hierarchyControlID;
+    this.pageStateID=pageStateID;
+    this.languageCode=languageCode;
+    this.tableID = tableID;
+
     if(mappointCallback) {
       if (typeof mappointCallback == 'function') {
         this.mappointCallback = mappointCallback
@@ -36,7 +44,6 @@ class DrilldownMap {
     let config = this.config = ReportalBase.mixin(options, {colorAxis:{dataClasses}});
     if(typeof Highcharts == undefined){throw new Error('Highcharts must be declared. Probably they are missing')};
     if(typeof Highcharts.maps == undefined){throw new Error('HighMaps must be loaded. Probably they are missing')};
-    this.constructor.addMapIDsToHierarchyLevel(hierarchy);
     //
     this.drawMap(hierarchy, containerID, initMap, config);
   }
@@ -110,29 +117,6 @@ class DrilldownMap {
       }
     });
     return series;
-  }
-
-  /**
-   * Updates initial hierarchy
-   * @param hierarchy
-   * @param parent - hierarchy level parent
-   */
-  static addMapIDsToHierarchyLevel(hierarchy, parent = null) {
-    hierarchy.forEach(subcell => {
-      subcell.parent = parent;
-      subcell.value = Math.random()*100;
-      if(subcell.parent && subcell.parent!=null && subcell.parent.map){
-        subcell.map = subcell.parent.map;
-      }
-      if (subcell.subcells) {
-        DrilldownMap.addMapIDsToHierarchyLevel(subcell.subcells, subcell);
-      }
-      if(subcell.parent && subcell.mapID && !subcell.parent.map){
-        if(!subcell.parent.mapID)
-          subcell.parent.mapID = [];
-        subcell.parent.mapID = subcell.parent.mapID.concat(subcell.mapID);
-      }
-    });
   }
 
   /**
@@ -260,12 +244,12 @@ class DrilldownMap {
    */
   updateMap(curLVL, chart, e){
     curLVL = curLVL.subcells.filter( el => el.text == e.point.series.name)[0];
-    if(curLVL && curLVL.map){// if we have another map to load
-      let map = DrilldownMap.loadMap(curLVL.map);
+    if(curLVL && curLVL.mapName){// if we have another map to load
+      let map = DrilldownMap.loadMap(curLVL.mapName);
       map.then(mapData=>{
         this.addSeries(curLVL,chart,e,mapData)
       });
-    } else if(curLVL && !curLVL.map){
+    } else if(curLVL && !curLVL.mapName){
       this.addSeries(curLVL,chart,e);
     }
     return curLVL;
@@ -337,14 +321,16 @@ class DrilldownMap {
         events: {
           drilldown: function(e){
             //TODO: add data promise;
+            let rowheaders = AsyncHierarchyTable.fetchChildHierarchy(this.id,this.hierarchyID,this.hierarchyControlID,this.pageStateID,this.languageCode);
             let chart = e.target;
             curLVL = self.updateMap(curLVL, chart, e);
+            console.log(curLVL);
             chart.subtitle.update({text: `Current region: ${curLVL.text}<br> Region NPS: ${curLVL.value}`});
           },
           drillupall: function(e){
             curLVL = curLVL.parent;
             if (curLVL)
-              chart.subtitle.update({text: `Current level: ${curLVL.text} <br> Region NPS: ${curLVL.value}`});
+              e.target.subtitle.update({text: `Current level: ${curLVL.text} <br> Region NPS: ${curLVL.value}`});
           }
         }
       },
