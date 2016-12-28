@@ -8,4 +8,4 @@ ReportalBase.mixin(window.Reportal,{
   ReportalBase
 });
 
-export default Reportal
+export default DrilldownMap

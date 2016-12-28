@@ -1,6 +1,6 @@
 {
   "name": "drilldown-nps-map",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Drilldown map using highmap.js",
   "main": "src/main.js",
   "repository": {
@@ -14,7 +14,7 @@
     "clean": "rimraf dist build",
     "lint": "eslint src",
     "docs": "node_modules/.bin/jsdoc --configure jsdoc.conf --verbose",
-    "docs-commit": "git subtree push --prefix docs/drilldown-nps-map origin gh-pages",
+    "docs-commit": "git subtree push --prefix docs/drilldown-nps-map/0.1.0 origin gh-pages",
     "test": "karma start --single-run --no-auto-watch karma.config.js",
     "report-coverage": "codecov -f coverage/lcov.info"
   },
@@ -63,7 +63,6 @@
     "codecov": ">1.0.0"
   },
   "dependencies": {
-    "highmap-nps": "github:confirmitasa/highmap-nps",
     "r-aggregated-table": "github:confirmitasa/r-aggregated-table",
     "r-async-hierarchy-table": "github:confirmitasa/r-async-hierarchy-table",
     "r-reportal-base": "github:confirmitasa/r-reportal-base"

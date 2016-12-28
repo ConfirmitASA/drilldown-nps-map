@@ -1,0 +1,21 @@
+.highcharts-drillup-button{
+  transform:translate(8px,8px);
+  &>text{
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+    &>.highcharts-button-box{
+      stroke:none;
+      }
+}
+
+.tooltip-level-label{
+  font-weight: bold;
+}
+
+svg.highcharts-root{
+  font-family: Roboto, sans-serif;
+}
+.highcharts-credits{
+  display:none;
+}

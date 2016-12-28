@@ -1,10 +1,49 @@
-require("./drilldown-map.css");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>DrilldownMap.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrilldownMap.html">DrilldownMap</a><ul class='methods'><li data-type='method'><a href="DrilldownMap.html#.computeColor">computeColor</a></li><li data-type='method'><a href="DrilldownMap.html#.createCustomGeoJSON">createCustomGeoJSON</a></li><li data-type='method'><a href="DrilldownMap.html#.getColor">getColor</a></li><li data-type='method'><a href="DrilldownMap.html#.getFeatures">getFeatures</a></li><li data-type='method'><a href="DrilldownMap.html#.getLevelByName">getLevelByName</a></li><li data-type='method'><a href="DrilldownMap.html#.loadMap">loadMap</a></li><li data-type='method'><a href="DrilldownMap.html#addSeries">addSeries</a></li><li data-type='method'><a href="DrilldownMap.html#composeSeries">composeSeries</a></li><li data-type='method'><a href="DrilldownMap.html#drawMap">drawMap</a></li><li data-type='method'><a href="DrilldownMap.html#getCoordinateSeries">getCoordinateSeries</a></li><li data-type='method'><a href="DrilldownMap.html#getSeriesData">getSeriesData</a></li><li data-type='method'><a href="DrilldownMap.html#getTooltip">getTooltip</a></li><li data-type='method'><a href="DrilldownMap.html#initMap">initMap</a></li><li data-type='method'><a href="DrilldownMap.html#updateMap">updateMap</a></li></ul></li><li><a href="MapHierarchy.html">MapHierarchy</a><ul class='methods'><li data-type='method'><a href="MapHierarchy.html#.addMapIDsToHierarchyLevel">addMapIDsToHierarchyLevel</a></li><li data-type='method'><a href="MapHierarchy.html#.normalize">normalize</a></li><li data-type='method'><a href="MapHierarchy.html#.processHierarchy">processHierarchy</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">DrilldownMap.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>require("./drilldown-map.css");
 import ReportalBase from "r-reportal-base";
 import AsyncHierarchyTable from "r-async-hierarchy-table";
 import MapHierarchy from "./map-hierarchy";
 import AggregatedTable from "r-aggregated-table";
 
-var CircularJSON=function(e,t){function l(e,t,o){var u=[],f=[e],l=[e],c=[o?n:"[Circular]"],h=e,p=1,d;return function(e,v){return t&&(v=t.call(this,e,v)),e!==""&&(h!==this&&(d=p-a.call(f,this)-1,p-=d,f.splice(p,f.length),u.splice(p-1,u.length),h=this),typeof v=="object"&&v?(a.call(f,v)<0&&f.push(h=v),p=f.length,d=a.call(l,v),d<0?(d=l.push(v)-1,o?(u.push((""+e).replace(s,r)),c[d]=n+u.join(n)):c[d]=c[0]):v=c[d]):typeof v=="string"&&o&&(v=v.replace(r,i).replace(n,r))),v}}function c(e,t){for(var r=0,i=t.length;r<i;e=e[t[r++].replace(o,n)]);return e}function h(e){return function(t,s){var o=typeof s=="string";return o&&s.charAt(0)===n?new f(s.slice(1)):(t===""&&(s=v(s,s,{})),o&&(s=s.replace(u,"$1"+n).replace(i,r)),e?e.call(this,t,s):s)}}function p(e,t,n){for(var r=0,i=t.length;r<i;r++)t[r]=v(e,t[r],n);return t}function d(e,t,n){for(var r in t)t.hasOwnProperty(r)&&(t[r]=v(e,t[r],n));return t}function v(e,t,r){return t instanceof Array?p(e,t,r):t instanceof f?t.length?r.hasOwnProperty(t)?r[t]:r[t]=c(e,t.split(n)):e:t instanceof Object?d(e,t,r):t}function m(t,n,r,i){return e.stringify(t,l(t,n,!i),r)}function g(t,n){return e.parse(t,h(n))}var n="~",r="\\x"+("0"+n.charCodeAt(0).toString(16)).slice(-2),i="\\"+r,s=new t(r,"g"),o=new t(i,"g"),u=new t("(?:^|([^\\\\]))"+i),a=[].indexOf||function(e){for(var t=this.length;t--&&this[t]!==e;);return t},f=String;return{stringify:m,parse:g}}(JSON,RegExp);
+var CircularJSON=function(e,t){function l(e,t,o){var u=[],f=[e],l=[e],c=[o?n:"[Circular]"],h=e,p=1,d;return function(e,v){return t&amp;&amp;(v=t.call(this,e,v)),e!==""&amp;&amp;(h!==this&amp;&amp;(d=p-a.call(f,this)-1,p-=d,f.splice(p,f.length),u.splice(p-1,u.length),h=this),typeof v=="object"&amp;&amp;v?(a.call(f,v)&lt;0&amp;&amp;f.push(h=v),p=f.length,d=a.call(l,v),d&lt;0?(d=l.push(v)-1,o?(u.push((""+e).replace(s,r)),c[d]=n+u.join(n)):c[d]=c[0]):v=c[d]):typeof v=="string"&amp;&amp;o&amp;&amp;(v=v.replace(r,i).replace(n,r))),v}}function c(e,t){for(var r=0,i=t.length;r&lt;i;e=e[t[r++].replace(o,n)]);return e}function h(e){return function(t,s){var o=typeof s=="string";return o&amp;&amp;s.charAt(0)===n?new f(s.slice(1)):(t===""&amp;&amp;(s=v(s,s,{})),o&amp;&amp;(s=s.replace(u,"$1"+n).replace(i,r)),e?e.call(this,t,s):s)}}function p(e,t,n){for(var r=0,i=t.length;r&lt;i;r++)t[r]=v(e,t[r],n);return t}function d(e,t,n){for(var r in t)t.hasOwnProperty(r)&amp;&amp;(t[r]=v(e,t[r],n));return t}function v(e,t,r){return t instanceof Array?p(e,t,r):t instanceof f?t.length?r.hasOwnProperty(t)?r[t]:r[t]=c(e,t.split(n)):e:t instanceof Object?d(e,t,r):t}function m(t,n,r,i){return e.stringify(t,l(t,n,!i),r)}function g(t,n){return e.parse(t,h(n))}var n="~",r="\\x"+("0"+n.charCodeAt(0).toString(16)).slice(-2),i="\\"+r,s=new t(r,"g"),o=new t(i,"g"),u=new t("(?:^|([^\\\\]))"+i),a=[].indexOf||function(e){for(var t=this.length;t--&amp;&amp;this[t]!==e;);return t},f=String;return{stringify:m,parse:g}}(JSON,RegExp);
 
 class DrilldownMap extends MapHierarchy {
   /**
@@ -12,7 +51,7 @@ class DrilldownMap extends MapHierarchy {
    * @param {Object} hierarchy - a hierarchical object for a map to be built upon
    * @param {String} containerID - id of the container the map will be drawn to
    * @param {Function} mappointCallback - executed when a mappoint (city) is clicked
-   * @param {Array.<{from:Number, to:Number, color:String, name:String}>} dataClasses - color bands for conditional formatting
+   * @param {Array.&lt;{from:Number, to:Number, color:String, name:String}>} dataClasses - color bands for conditional formatting
    * @param {Object} options - options passed to HighMap to restyle/configure it
    * @param {Function} colorFn - A function that allows custom color coding computation based on value and target.
    * `colorFn` accepts two attributes: `value` and `target` and must return a color string based on those two attributes.
@@ -23,7 +62,7 @@ class DrilldownMap extends MapHierarchy {
    *    {
    *    //some constructor configuration above
    *      colorFn: function(value,target){
-   *        return (value!=null && target!=null)? (value - target >= 0) ? "#18BC9C" : ((value >= 0.9*target) ? "#FF4900" : "#E45335") : undefined;
+   *        return (value!=null &amp;&amp; target!=null)? (value - target >= 0) ? "#18BC9C" : ((value >= 0.9*target) ? "#FF4900" : "#E45335") : undefined;
    *      }
    *     //some constructor configuration below
    *    }
@@ -35,7 +74,7 @@ class DrilldownMap extends MapHierarchy {
     hierarchy, initMap="custom/world-highres2", containerID, mappointCallback,
     excludeColumns, excludeRows, valueColumn=1,
     colorFn=function(value,target){
-       return value!=null? value >= 80 ? "#4caf50" : ((value <80 && value>=60 ) ? "#ffc107" : "#ff5722") : "blue";
+       return value!=null? value >= 80 ? "#4caf50" : ((value &lt;80 &amp;&amp; value>=60 ) ? "#ffc107" : "#ff5722") : "blue";
     },
     hierarchyID,hierarchyControlID,pageStateId,languageCode=9,tableID,
     normals,normalsSeparator, dataClasses = [{
@@ -57,7 +96,7 @@ class DrilldownMap extends MapHierarchy {
     super(hierarchy,normals,normalsSeparator);
 
     this.constructor.parseTableData({source,excludeRows,excludeColumns,rowheaders:rowheaders.map(rh=>rh[0]),flatHierarchy:this.flatHierarchy});
-    if(colorFn && typeof colorFn == "function"){
+    if(colorFn &amp;&amp; typeof colorFn == "function"){
       this.colorFn = colorFn;
     }
     this.valueColumn = valueColumn;
@@ -67,7 +106,7 @@ class DrilldownMap extends MapHierarchy {
     this.languageCode=languageCode;
     this.tableID = tableID;
 
-    if(mappointCallback && mappointCallback!=null) {
+    if(mappointCallback &amp;&amp; mappointCallback!=null) {
       if (typeof mappointCallback == 'function') {
         this.mappointCallback = mappointCallback
       } else {
@@ -86,7 +125,7 @@ class DrilldownMap extends MapHierarchy {
       source,
       excludeColumns,excludeRows
     });
-    if(rowheaders && rowheaders!=null && rowheaders.length>0){
+    if(rowheaders &amp;&amp; rowheaders!=null &amp;&amp; rowheaders.length>0){
       rowheaders.forEach((rh,i)=>{
         if(!flatHierarchy[rh]._data){
           flatHierarchy[rh]._data=AT.data[i].map((dataItem,index)=>{
@@ -242,7 +281,7 @@ class DrilldownMap extends MapHierarchy {
   static getColor(val, dataClasses){
     let color;
     dataClasses.forEach(dataClass =>{
-      if(val >= dataClass.from && val < dataClass.to) {
+      if(val >= dataClass.from &amp;&amp; val &lt; dataClass.to) {
         color = dataClass.color;
       }
     });
@@ -334,12 +373,12 @@ class DrilldownMap extends MapHierarchy {
    */
   updateMap(curLVL, chart, e){
     //curLVL = curLVL.subcells.filter( el => el.text == e.point.series.name)[0];
-    if(curLVL && curLVL.mapName){// if we have another map to load
+    if(curLVL &amp;&amp; curLVL.mapName){// if we have another map to load
       let map = DrilldownMap.loadMap(curLVL.mapName);
       map.then(mapData=>{
         this.addSeries(curLVL,chart,e,mapData)
       });
-    } else if(curLVL && !curLVL.mapName){
+    } else if(curLVL &amp;&amp; !curLVL.mapName){
       this.addSeries(curLVL,chart,e);
     }
     //return curLVL;
@@ -363,7 +402,7 @@ class DrilldownMap extends MapHierarchy {
         chart.addSingleSeriesAsDrilldown(e.point, seriesItem);
       }
       curLVL.subcells.forEach(subcell => {
-        if(!subcell.mapID && !subcell.coordinates) return;
+        if(!subcell.mapID &amp;&amp; !subcell.coordinates) return;
 
         let seriesItem = this.composeSeries(subcell,mapData, chart);
         chart.addSingleSeriesAsDrilldown(e.point, seriesItem);
@@ -383,10 +422,10 @@ class DrilldownMap extends MapHierarchy {
    * Generates chart subtitle returning region and main value
    * */
   get subtitle(){
-    //return `${this.curLVL._data[0].title}: ${this.curLVL._data[0].value}<br> ${this.curLVL._data[this.valueColumn].title}: ${this.curLVL._data[this.valueColumn].value}`
+    //return `${this.curLVL._data[0].title}: ${this.curLVL._data[0].value}&lt;br> ${this.curLVL._data[this.valueColumn].title}: ${this.curLVL._data[this.valueColumn].value}`
     return this.curLVL._data.map((item)=>{
-      return `<span class="tooltip-level-label">${item.title}:</span><span class="tooltip-level-value"> ${item.value}</span>`
-    }).join("<br />")
+      return `&lt;span class="tooltip-level-label">${item.title}:&lt;/span>&lt;span class="tooltip-level-value"> ${item.value}&lt;/span>`
+    }).join("&lt;br />")
   }
 
   /**
@@ -394,7 +433,7 @@ class DrilldownMap extends MapHierarchy {
    * */
   getTooltip(){
     let data = this.curLVL._data;
-    return data.map((item,index)=>`<span class="tooltip-level-label">${item.title}:</span><span class="tooltip-level-value"> {point.data.${index}.value}</span>`).join("<br />")
+    return data.map((item,index)=>`&lt;span class="tooltip-level-label">${item.title}:&lt;/span>&lt;span class="tooltip-level-value"> {point.data.${index}.value}&lt;/span>`).join("&lt;br />")
   }
 
   /**
@@ -407,7 +446,7 @@ class DrilldownMap extends MapHierarchy {
     let self = this;
     let config = {
       lang: {
-        drillUpText: '< to {series.parent}'
+        drillUpText: '&lt; to {series.parent}'
       },
       tooltip: {
         pointFormat: self.getTooltip()
@@ -511,3 +550,22 @@ class DrilldownMap extends MapHierarchy {
 }
 
 export default DrilldownMap;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Wed Dec 28 2016 16:33:38 GMT+0300 (Russia TZ 2 Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
