@@ -1,6 +1,9 @@
 import ReportalBase from "r-reportal-base";
 import AsyncHierarchyTable from "r-async-hierarchy-table";
 import MapHierarchy from "./map-hierarchy";
+import AggregatedTable from "r-aggregated-table";
+
+var CircularJSON=function(e,t){function l(e,t,o){var u=[],f=[e],l=[e],c=[o?n:"[Circular]"],h=e,p=1,d;return function(e,v){return t&&(v=t.call(this,e,v)),e!==""&&(h!==this&&(d=p-a.call(f,this)-1,p-=d,f.splice(p,f.length),u.splice(p-1,u.length),h=this),typeof v=="object"&&v?(a.call(f,v)<0&&f.push(h=v),p=f.length,d=a.call(l,v),d<0?(d=l.push(v)-1,o?(u.push((""+e).replace(s,r)),c[d]=n+u.join(n)):c[d]=c[0]):v=c[d]):typeof v=="string"&&o&&(v=v.replace(r,i).replace(n,r))),v}}function c(e,t){for(var r=0,i=t.length;r<i;e=e[t[r++].replace(o,n)]);return e}function h(e){return function(t,s){var o=typeof s=="string";return o&&s.charAt(0)===n?new f(s.slice(1)):(t===""&&(s=v(s,s,{})),o&&(s=s.replace(u,"$1"+n).replace(i,r)),e?e.call(this,t,s):s)}}function p(e,t,n){for(var r=0,i=t.length;r<i;r++)t[r]=v(e,t[r],n);return t}function d(e,t,n){for(var r in t)t.hasOwnProperty(r)&&(t[r]=v(e,t[r],n));return t}function v(e,t,r){return t instanceof Array?p(e,t,r):t instanceof f?t.length?r.hasOwnProperty(t)?r[t]:r[t]=c(e,t.split(n)):e:t instanceof Object?d(e,t,r):t}function m(t,n,r,i){return e.stringify(t,l(t,n,!i),r)}function g(t,n){return e.parse(t,h(n))}var n="~",r="\\x"+("0"+n.charCodeAt(0).toString(16)).slice(-2),i="\\"+r,s=new t(r,"g"),o=new t(i,"g"),u=new t("(?:^|([^\\\\]))"+i),a=[].indexOf||function(e){for(var t=this.length;t--&&this[t]!==e;);return t},f=String;return{stringify:m,parse:g}}(JSON,RegExp);
 
 class DrilldownMap extends MapHierarchy {
   /**
@@ -10,8 +13,28 @@ class DrilldownMap extends MapHierarchy {
    * @param {Function} mappointCallback - executed when a mappoint (city) is clicked
    * @param {Array.<{from:Number, to:Number, color:String, name:String}>} dataClasses - color bands for conditional formatting
    * @param {Object} options - options passed to HighMap to restyle/configure it
+   * @param {Function} colorFn - A function that allows custom color coding computation based on value and target.
+   * `colorFn` accepts two attributes: `value` and `target` and must return a color string based on those two attributes.
+   * Make sure hierarchy has `target` loaded from DBDesigner table into each hierarchy level, otherwise a default config `dataClasses` takes precedence on value
+   * Example:
+   *
+   * ``` javascript
+   *    {
+   *    //some constructor configuration above
+   *      colorFn: function(value,target){
+   *        return (value!=null && target!=null)? (value - target >= 0) ? "#18BC9C" : ((value >= 0.9*target) ? "#FF4900" : "#E45335") : undefined;
+   *      }
+   *     //some constructor configuration below
+   *    }
+   * ```
+   * @param {Number} [valueColumn=1] - Zero-based column index that contains primary value which will be used for map coloring
    * */
-  constructor({hierarchy, initMap="custom/world-highres2", containerID, mappointCallback, rowheaders, hierarchyID,hierarchyControlID,pageStateID,languageCode=9,tableID, dataClasses = [{
+  constructor({
+    source,rowheaders, // initial table
+    hierarchy, initMap="custom/world-highres2", containerID, mappointCallback,
+    excludeColumns, excludeRows, valueColumn=1,colorFn,
+    hierarchyID,hierarchyControlID,pageStateId,languageCode=9,tableID,
+    normals,normalsSeparator, dataClasses = [{
     from: 80,
     to: 100,
     color: '#8bc34a',
@@ -27,14 +50,20 @@ class DrilldownMap extends MapHierarchy {
     color: '#f44336',
     name: 'Detractor'
   }], options={}}={}){
+    super(hierarchy,normals,normalsSeparator);
 
+    this.constructor.parseTableData({source,excludeRows,excludeColumns,rowheaders:rowheaders.map(rh=>rh[0]),flatHierarchy:this.flatHierarchy});
+    if(colorFn && typeof colorFn == "function"){
+      this.colorFn = colorFn;
+    }
+    this.valueColumn = valueColumn;
     this.hierarchyID= hierarchyID;
     this.hierarchyControlID= hierarchyControlID;
-    this.pageStateID=pageStateID;
+    this.pageStateId=pageStateId;
     this.languageCode=languageCode;
     this.tableID = tableID;
 
-    if(mappointCallback) {
+    if(mappointCallback && mappointCallback!=null) {
       if (typeof mappointCallback == 'function') {
         this.mappointCallback = mappointCallback
       } else {
@@ -42,10 +71,31 @@ class DrilldownMap extends MapHierarchy {
       }
     }
     let config = this.config = ReportalBase.mixin(options, {colorAxis:{dataClasses}});
-    if(typeof Highcharts == undefined){throw new Error('Highcharts must be declared. Probably they are missing')};
-    if(typeof Highcharts.maps == undefined){throw new Error('HighMaps must be loaded. Probably they are missing')};
+    if(typeof Highcharts == undefined){throw new Error('Highcharts must be declared. Probably they are missing')}
+    if(typeof Highcharts.maps == undefined){throw new Error('HighMaps must be loaded. Probably they are missing')}
     //
-    this.drawMap(hierarchy, containerID, initMap, config);
+    this.drawMap(rowheaders, containerID, initMap, config);
+  }
+
+  static parseTableData({source,excludeRows,excludeColumns,rowheaders, flatHierarchy}={}){
+    let AT = new AggregatedTable({
+      source,
+      excludeColumns,excludeRows
+    });
+    if(rowheaders && rowheaders!=null && rowheaders.length>0){
+      rowheaders.forEach((rh,i)=>{
+        if(!flatHierarchy[rh]._data){
+          flatHierarchy[rh]._data=AT.data[i].map((dataItem,index)=>{
+            return{
+              value: dataItem.data,
+              title: index!=0?AT.columns[index].title:"Region"
+            }
+          })
+        }
+      })
+    } else {
+      throw new Error('rowheaders must be present to parse data');
+    }
   }
 
   /**
@@ -109,7 +159,7 @@ class DrilldownMap extends MapHierarchy {
    * @param {Array} [series=[]] - series
    * @returns {Array}
    * */
-   initMap(curLVL, series = []){
+  initMap(curLVL, series = []){
     curLVL.subcells.forEach( subcell => {
       if (subcell.mapID) {
         let seriesItem = this.composeSeries(subcell);
@@ -132,30 +182,47 @@ class DrilldownMap extends MapHierarchy {
     });
   }
 
+  static getPrimaryValue(level,valueColumn){
+    return level._data[valueColumn].value;
+  }
+
+
   /**
    * Creates a single series data for HighMap series option
    * @param {Object} level - a level in hierarchy
-   * @returns {Obejct}
+   * @returns {Object}
    */
-  static getSeriesData(level){
+  getSeriesData(level){
     let drilldown = level.subcells ? level.text : null;
     if (typeof level.mapID === 'string') {
       return [{
-        'drilldown': drilldown,
-        'code': level.mapID,
-        'value': level.value
+        drilldown: drilldown,
+        code: level.mapID,
+        value: DrilldownMap.getPrimaryValue(level,this.valueColumn),
+        data: level._data,
+        color: DrilldownMap.computeColor(this.colorFn,DrilldownMap.getPrimaryValue(level,this.valueColumn),level.target)
       }]
     } else if (Array.isArray(level.mapID)){
-      return level.mapID.map(id=> {
+      return level.mapID.map(mapID=> {
+
         return {
-          'drilldown': drilldown,
-          'code': id,
-          'value': level.value
+          drilldown: drilldown,
+          code: mapID,
+          value: DrilldownMap.getPrimaryValue(level,this.valueColumn),
+          data: level._data,
+          color: DrilldownMap.computeColor(this.colorFn,DrilldownMap.getPrimaryValue(level,this.valueColumn),level.target)
         }
       });
     } else {
       throw new Error("Data element is corrupted");
     }
+  }
+
+  /**
+   * Executes `colorFn` passed by user to compute color by passing `value` and `target` to it
+   * */
+  static computeColor(colorFn, value, target){
+    return !colorFn? undefined : colorFn(value, target);
   }
 
   /**
@@ -210,11 +277,11 @@ class DrilldownMap extends MapHierarchy {
   }
 
   /**
-   * Creates a single series for Highmaps series option
-   * @param subcell
+   * Creates a single series item for Highmaps series option
+   * @param {Object} subcell - a subcell
    * @param mapData
    * @param chart
-   * @returns {Object}
+   * @returns {Object} Returns series
    */
   composeSeries(subcell,mapData,chart){
     if(!subcell.coordinates) {
@@ -222,17 +289,27 @@ class DrilldownMap extends MapHierarchy {
       if (subcell.mapID) {
         return {
           name: subcell.text,
-          tooltip: {
-            pointFormat: 'NPS : {point.value}'
-          },
+          /*tooltip: {
+           pointFormat: 'NPS : {point.value}'
+           },*/
           allAreas: false,
           parent: subcell.parent.text,
           mapData,
           joinBy: ['hc-key', 'code'],
-          data: DrilldownMap.getSeriesData(subcell),
+          data: this.getSeriesData(subcell),
         };
       }
     } else {return this.getCoordinateSeries(subcell,mapData,chart)}
+  }
+
+  /**
+   * get subcell by text rather than by id
+   * @param {Object} curLVL - current level
+   * @param {String} name - name of the subcell we're looking for
+   * @returns {Object} Returns a subcell which has that name
+   * */
+  static getLevelByName(curLVL,name){
+    return curLVL.subcells.filter(el => el.text == name)[0];
   }
 
   /**
@@ -243,7 +320,7 @@ class DrilldownMap extends MapHierarchy {
    * @returns {Object} Returns curLVL
    */
   updateMap(curLVL, chart, e){
-    curLVL = curLVL.subcells.filter( el => el.text == e.point.series.name)[0];
+    //curLVL = curLVL.subcells.filter( el => el.text == e.point.series.name)[0];
     if(curLVL && curLVL.mapName){// if we have another map to load
       let map = DrilldownMap.loadMap(curLVL.mapName);
       map.then(mapData=>{
@@ -252,7 +329,7 @@ class DrilldownMap extends MapHierarchy {
     } else if(curLVL && !curLVL.mapName){
       this.addSeries(curLVL,chart,e);
     }
-    return curLVL;
+    //return curLVL;
   }
 
   /**
@@ -262,7 +339,7 @@ class DrilldownMap extends MapHierarchy {
    * @param {Object} e - drilldown event object
    * @param {Object} mapData - mapData geoJSON
    */
-   addSeries(curLVL,chart,e,mapData){
+  addSeries(curLVL,chart,e,mapData){
     if (curLVL.subcells && curLVL.isGlobal) { // if it's an end point
       if(curLVL.subcells[0].coordinates){
         let seriesItem = this.composeSeries(curLVL,mapData, chart);
@@ -290,51 +367,103 @@ class DrilldownMap extends MapHierarchy {
   }
 
   /**
+   * Generates chart subtitle returning region and main value
+   * */
+  get subtitle(){
+    //return `${this.curLVL._data[0].title}: ${this.curLVL._data[0].value}<br> ${this.curLVL._data[this.valueColumn].title}: ${this.curLVL._data[this.valueColumn].value}`
+    return this.curLVL._data.map((item)=>{
+      return `<span class="tooltip-level-label">${item.title}:</span><span class="tooltip-level-value"> ${item.value}</span>`
+    }).join("<br />")
+  }
+
+  /**
+   * Generates a serialized dataset for a tooltip
+   * */
+  getTooltip(){
+    let data = this.curLVL._data;
+    return data.map((item,index)=>`<span class="tooltip-level-label">${item.title}:</span><span class="tooltip-level-value"> {point.data.${index}.value}</span>`).join("<br />")
+  }
+
+  /**
    * @param hierarchy
    * @param containerID
    * @param options
    */
-  drawMap(hierarchy, containerID, initMap, options){
-    let curLVL = hierarchy[0];
+  drawMap(rowheaders, containerID, initMap, options){
+    this.curLVL = this.flatHierarchy[rowheaders[0]];
     let self = this;
     let config = {
       lang: {
         drillUpText: 'Back to {series.parent}'
       },
       tooltip: {
-        pointFormat: 'NPS : {point.value}'
+        pointFormat: self.getTooltip()
       },
       title: {
-        text: 'Drilldown map'
+        text: ''
       },
       legend: {
         enabled: false
       },
       mapNavigation: {
         enabled: true,
+        buttons:{
+          zoomIn:{
+            verticalAlign:"bottom"
+          },
+          zoomOut:{
+            verticalAlign:"bottom"
+          }
+        }
       },
       subtitle:{
         align: 'right',
-        text: `Current level: ${curLVL.text} <br> Region NPS: ${curLVL.value}`
+        text: self.subtitle,
+        floating:true
+      },
+      drilldown:{
+        drillUpButton: {
+          position:{
+            align:"left",
+            y:0
+          },
+          relativeTo:'spacingBox'
+        }
       },
       chart:{
         events: {
           drilldown: function(e){
-            //TODO: add data promise;
-            let rowheaders = AsyncHierarchyTable.fetchChildHierarchy(this.id,this.hierarchyID,this.hierarchyControlID,this.pageStateID,this.languageCode);
+            //this == chart reference;
+            console.log(CircularJSON.parse(CircularJSON.stringify(e.point)));
             let chart = e.target;
-            curLVL = self.updateMap(curLVL, chart, e);
-            console.log(curLVL);
-            chart.subtitle.update({text: `Current region: ${curLVL.text}<br> Region NPS: ${curLVL.value}`});
+            self.curLVL = DrilldownMap.getLevelByName(self.curLVL,e.point.series.name);
+            let curLVL = self.curLVL;
+            if(curLVL){
+              chart.showLoading('fetching data');
+              let table = AsyncHierarchyTable.fetchChildTable(curLVL.id, curLVL.parent?curLVL.parent.id:null, self.tableID, self.pageStateId)
+                .then(table=>{
+                  // parse data loaded from table
+                  DrilldownMap.parseTableData({
+                    source:table,
+                    excludeRows:0,
+                    rowheaders:curLVL.subcells.map(lvl=>lvl.id),
+                    flatHierarchy:self.flatHierarchy
+                  });
+                  self.updateMap(curLVL, chart, e);
+                  chart.subtitle.update({text: self.subtitle});
+                  chart.hideLoading();
+                });
+            }
           },
           drillupall: function(e){
-            curLVL = curLVL.parent;
-            if (curLVL)
-              e.target.subtitle.update({text: `Current level: ${curLVL.text} <br> Region NPS: ${curLVL.value}`});
+            self.curLVL = self.curLVL.parent;
+            if (self.curLVL){
+              e.target.subtitle.update({text: self.subtitle});
+            }
           }
         }
       },
-      series: this.initMap(curLVL,[{
+      series: self.initMap(self.curLVL,[{
         mapData: Highcharts.maps[initMap]
       }])
     };

@@ -63,6 +63,8 @@
     "codecov": ">1.0.0"
   },
   "dependencies": {
+    "highmap-nps": "github:confirmitasa/highmap-nps",
+    "r-aggregated-table": "github:confirmitasa/r-aggregated-table",
     "r-async-hierarchy-table": "github:confirmitasa/r-async-hierarchy-table",
     "r-reportal-base": "github:confirmitasa/r-reportal-base"
   }

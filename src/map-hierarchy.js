@@ -1,28 +1,34 @@
 /**
  * Created by IvanP on 26.12.2016.
  */
-
 class MapHierarchy {
   constructor(hierarchy,normals,normalsSeparator){
     //this.aHierarchy = hierarchy;
-    this.flatHierarchy = this.constructor.composeFlatHierarchy(hierarchy,normals,normalsSeparator);
-    this.hierarchy = this.constructor.processHierarchy(this.flatHierarchy);
+    this.flatHierarchy = hierarchy;
+    this.hierarchy = this.constructor.processHierarchy(this.flatHierarchy,normals,normalsSeparator);
     this.constructor.addMapIDsToHierarchyLevel(this.hierarchy);
   }
 
   /**
    * Processes hierarchy array by assigning parent-child relations and returning those that don't have a parent
    * @param {Object} flatHierarchy - a flat hierarchy object with ids as keys
+   * @param {Object} [normals={}] - an object where keys myst coincide with column ids (thus be identical to keys in `item`). `normals` doesn't require for all keys from `item` to be present, only those that need to be normalised to a different type
+   * @param {String} [separator=','] - a separator array items are serialized with, by default it's a comma (`,`)
    * */
-  static processHierarchy(flatHierarchy){
-    let orphans = [];
+  static processHierarchy(flatHierarchy,normals={},separator=','){
+    let orphans = [],
+        toNormalize = Object.keys(normals).length>0;
     for(let key in flatHierarchy){
       let item = flatHierarchy[key];
+      if(toNormalize)MapHierarchy.normalize(item,normals);
 
       // map item to parent
       if(item.parent && item.parent!=null && item.parent.length>0){
         item.parent = flatHierarchy[item.parent];
         item.parent.subcells = item.parent.subcells || [];
+        //TODO: delete this when value is in place
+        item.value = Math.random()*100;
+
         item.parent.subcells.push(item);
       } else {
         orphans.push(item);
@@ -56,16 +62,16 @@ class MapHierarchy {
    * */
   static normalize(item,normals={},separator=','){
     let parser = {
-      arrayString: val => val.split(separator),
-      arrayNumber: val => val.split(separator).map(i=>parseFloat(i)),
+      stringArray: val => val.split(separator),
+      numberArray: val => val.split(separator).map(i=>parseFloat(i)),
       string: val => val.trim(),
       number: val => val!=null && !isNaN(parseFloat(val))? parseFloat(val): null,
       boolean: val => val.toLowerCase()=="true" || val=="1"
     };
     for(let normal in normals){
-      if(item[normal]){ // property exists in object
-        if(item.length>0){
-          parser[normals[normal]](item[normal])
+      if(item[normal]){// property exists in object
+        if(item[normal].length>0){
+          item[normal] = parser[normals[normal]](item[normal])
         } else {
           delete item[normal]
         }
