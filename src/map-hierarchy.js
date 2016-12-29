@@ -3,7 +3,6 @@
  */
 class MapHierarchy {
   constructor(hierarchy,normals,normalsSeparator){
-    //this.aHierarchy = hierarchy;
     this.flatHierarchy = hierarchy;
     this.hierarchy = this.constructor.processHierarchy(this.flatHierarchy,normals,normalsSeparator);
     this.constructor.addMapIDsToHierarchyLevel(this.hierarchy);
@@ -26,9 +25,6 @@ class MapHierarchy {
       if(item.parent && item.parent!=null && item.parent.length>0){
         item.parent = flatHierarchy[item.parent];
         item.parent.subcells = item.parent.subcells || [];
-        //TODO: delete this when value is in place
-        //item.value = Math.random()*100;
-
         item.parent.subcells.push(item);
       } else {
         orphans.push(item);
@@ -87,8 +83,6 @@ class MapHierarchy {
    */
   static addMapIDsToHierarchyLevel(hierarchy, parent = null) {
     hierarchy.forEach(subcell => {
-      //subcell.parent = parent;
-      //subcell.value = Math.random()*100;
       if(subcell.parent && subcell.parent!=null && subcell.parent.mapName){
         subcell.mapName = subcell.parent.mapName;
       }
