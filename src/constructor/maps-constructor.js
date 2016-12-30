@@ -41,7 +41,7 @@ class MapsConstructor{
         if(target.nodeName=="TABLE"){
           [].slice.call(target.querySelectorAll("tbody>tr>td:nth-child(1)")).forEach(el=>{
             let parent = el.parentNode;
-            if(el.textContent.toLowerCase().indexOf(value)>-1){
+            if(el.textContent.toLowerCase().indexOf(value.toLowerCase())>-1){
               parent.style.display="table-row";
             } else {
               parent.style.display="none";
@@ -50,7 +50,7 @@ class MapsConstructor{
         }
         if(target.nodeName=="UL"){
           [].slice.call(target.querySelectorAll("li")).forEach(el=>{
-            if(el.textContent.toLowerCase().indexOf(value)>-1){
+            if(el.textContent.toLowerCase().indexOf(value.toLowerCase())>-1){
               el.style.display="block";
             } else {
               el.style.display="none";
