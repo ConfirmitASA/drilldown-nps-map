@@ -3,11 +3,12 @@ var name = packageJSON["name"];
 
 module.exports = {
   entry: {
-    js:"./src/main.js",
+    "drilldown-nps-map.bundle":"./src/main.js",
+    "constructor.bundle": "./src/constructor/maps-constructor.js"
   },
   output: {
     path: "./dist",
-    filename: name+".bundle.js"
+    filename: "[name].js"
   },
   module: {
     loaders: [{

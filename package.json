@@ -64,6 +64,7 @@
     "webpack": "^1.13.1"
   },
   "dependencies": {
+    "flexboxLayout": "github:confirmitasa/flexboxLayout",
     "r-aggregated-table": "github:confirmitasa/r-aggregated-table",
     "r-async-hierarchy-table": "github:confirmitasa/r-async-hierarchy-table",
     "r-reportal-base": "github:confirmitasa/r-reportal-base"
