@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>constructor/maps-constructor.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="DrilldownMap.html">DrilldownMap</a><ul class='methods'><li data-type='method'><a href="DrilldownMap.html#.computeColor">computeColor</a></li><li data-type='method'><a href="DrilldownMap.html#.createCustomGeoJSON">createCustomGeoJSON</a></li><li data-type='method'><a href="DrilldownMap.html#.getFeatures">getFeatures</a></li><li data-type='method'><a href="DrilldownMap.html#.getLevelByName">getLevelByName</a></li><li data-type='method'><a href="DrilldownMap.html#.getPrimaryValue">getPrimaryValue</a></li><li data-type='method'><a href="DrilldownMap.html#.loadMap">loadMap</a></li><li data-type='method'><a href="DrilldownMap.html#.parseTableData">parseTableData</a></li><li data-type='method'><a href="DrilldownMap.html#addSeries">addSeries</a></li><li data-type='method'><a href="DrilldownMap.html#composeSeries">composeSeries</a></li><li data-type='method'><a href="DrilldownMap.html#drawMap">drawMap</a></li><li data-type='method'><a href="DrilldownMap.html#getCoordinateSeries">getCoordinateSeries</a></li><li data-type='method'><a href="DrilldownMap.html#getSeriesData">getSeriesData</a></li><li data-type='method'><a href="DrilldownMap.html#getTooltip">getTooltip</a></li><li data-type='method'><a href="DrilldownMap.html#initMap">initMap</a></li><li data-type='method'><a href="DrilldownMap.html#updateMap">updateMap</a></li></ul></li><li><a href="MapHierarchy.html">MapHierarchy</a><ul class='methods'><li data-type='method'><a href="MapHierarchy.html#.addMapIDsToHierarchyLevel">addMapIDsToHierarchyLevel</a></li><li data-type='method'><a href="MapHierarchy.html#.normalize">normalize</a></li><li data-type='method'><a href="MapHierarchy.html#.processHierarchy">processHierarchy</a></li></ul></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">constructor/maps-constructor.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * Created by IvanP on 30.12.2016.
+ */
+require('./styles.css');
+import ReportalBase from "r-reportal-base";
+
+class MapsConstructor{
+  constructor(){
+    return ReportalBase.promiseRequest("maps.json").then(cfg=>{
+      this.config = JSON.parse(cfg);
+      this.hm = this.constructor.stubHighcharts();
+      this.mapsSelector = document.querySelector("#mapsSectionSelector");
+      this.mapsList = document.querySelector("#mapsList");
+      this.countriesList = document.querySelector("#countriesList");
+      this.countriesFilter = document.querySelector("#countriesFilter");
+      this.mapsFilter = document.querySelector("#mapsFilter");
+      this.processMap = this.processMap.bind(this);
+
+      this.createMapSwitcher();
+      this.initFiltering();
+    });
+  }
+
+  static stubHighcharts(){
+    if(!window.Highcharts){
+      window.Highcharts = {maps:{}};
+    } else if(!window.Highcharts.maps){window.Highcharts.maps={}}
+    return window.Highcharts.maps
+  }
+
+  /**
+   * Sets up simple filtering matching all matches on keystroke and clear
+   * */
+  initFiltering(){
+    let filters = [this.countriesFilter,this.mapsFilter];
+    let targets = [this.countriesList, this.mapsList];
+    filters.forEach((filter,index)=>{
+      filter.addEventListener('input',e=>{
+        let value = e.target.value;
+        let target = targets[index];
+        if(target.nodeName=="TABLE"){
+          [].slice.call(target.querySelectorAll("tbody>tr>td:nth-child(1)")).forEach(el=>{
+            let parent = el.parentNode;
+            if(el.textContent.toLowerCase().indexOf(value)>-1){
+              parent.style.display="table-row";
+            } else {
+              parent.style.display="none";
+            }
+          })
+        }
+        if(target.nodeName=="UL"){
+          [].slice.call(target.querySelectorAll("li")).forEach(el=>{
+            if(el.textContent.toLowerCase().indexOf(value)>-1){
+              el.style.display="block";
+            } else {
+              el.style.display="none";
+            }
+          })
+        }
+      })
+    })
+  };
+
+  /**
+   * creates a dropdown that switches maps
+   *
+   */
+  createMapSwitcher(){
+    let select = document.querySelector("#mapsSectionSelector");
+    this.config.forEach((section,index)=>{
+      let option = document.createElement('option');
+      option.value = index;
+      option.textContent = section.title;
+      this.mapsSelector.appendChild(option);
+    });
+    this.mapsSelector.addEventListener('change',e=>{
+      this.loadMapsSection(select.value);
+    });
+    this.loadMapsSection(0);
+  }
+
+  /**
+   * loads a map section
+   * */
+  loadMapsSection(sectionIndex){
+    this.currentSection = this.config[sectionIndex];
+    this.clearMapsList();
+    this.currentSection.maps.forEach((map,i)=>{
+      let li = MapsConstructor.createElement('li');
+      li.appendChild(this.createRadio(i,map.title));
+      li.appendChild(this.createLink(i,'demo'));
+      this.mapsList.appendChild(li);
+    })
+  }
+
+
+  createRadio(index,label){
+    let radio = document.createElement('input');
+    radio.type = "radio";
+    radio.name = "map";
+    radio.value = index;
+    let l = this.constructor.createElement('label',label);
+    l.insertBefore(radio,l.firstChild);
+    radio.addEventListener('change',this.processMap);
+    return l
+  }
+
+  createLink(index, property, target="_blank"){
+    let prop = this.currentSection.maps[index][property],
+        link = MapsConstructor.createElement('a',prop.title);
+    link.href = prop.href;
+    link.target = target;
+    return link
+  }
+
+  processMap(e){
+    let map = this.currentSection.maps[e.target.value];
+    let oMap = this.fakeXHR(map.js.href);
+    oMap.then(mapJSON=>{
+      this.clearCountriesList();
+      this.constructor.updateCodebox(this.constructor.getMapID(map.js.href));
+      this.buildCountriesList(mapJSON)
+    });
+  }
+
+  static updateCodebox(mapID) {
+    document.querySelector('.codebox').innerHTML = `mapID: ${mapID}`;
+  }
+
+  buildCountriesList(map){
+    let df = document.createDocumentFragment();
+
+    map.features.forEach(feature=>{
+      let p = feature.properties,
+          row = MapsConstructor.createElement('tr');
+      df.appendChild(row);
+      row.appendChild(MapsConstructor.createElement('td',p['name']));
+      row.appendChild(MapsConstructor.createElement('td',p['hc-key']));
+      row.appendChild(MapsConstructor.createElement('td',p['subregion']));
+      row.appendChild(MapsConstructor.createElement('td',p['region-wb']));
+    });
+    this.countriesList.querySelector('tbody').appendChild(df);
+  }
+
+  clearCountriesList(){
+    this.countriesList.querySelector('tbody').innerHTML = '';
+  }
+
+  static createElement(tag,text){
+    let el = document.createElement(tag);
+    if(text){
+      el.textContent = text;
+    }
+    return el
+  }
+  static getMapID(href){
+    return href.split("mapdata/")[1].split('.')[0];
+  }
+
+  fakeXHR(url){
+    let mapID = this.constructor.getMapID(url),
+      hm=this.hm;
+    return new Promise((resolve,reject)=>{
+      if(!this.hm[mapID]){
+        let script = document.createElement('script'),
+            head = document.querySelector('head');
+        script.addEventListener('load',getContents);
+        function getContents(e){
+          script.removeEventListener('load',getContents);
+          head.removeChild(script);
+          resolve(hm[mapID]);
+        }
+        script.src = url;
+        head.appendChild(script);
+      } else {
+        resolve(hm[mapID])
+      }
+    });
+  }
+
+  clearMapsList(){
+    if(this.mapsList.children.length>0){
+      [].slice.call(this.mapsList.querySelectorAll('input[type=radio]')).forEach(cb=>cb.removeEventListener('change',this.processMap));
+      this.mapsList.innerHTML='';
+
+    }
+  }
+}
+export default MapsConstructor
+
+window.Reportal = window.Reportal || {};
+ReportalBase.mixin(window.Reportal,{
+  MapsConstructor
+});
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Fri Dec 30 2016 20:21:59 GMT+0300 (Russia TZ 2 Standard Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
