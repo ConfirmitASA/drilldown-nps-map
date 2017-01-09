@@ -124,7 +124,7 @@ class MapsConstructor{
   }
 
   static updateCodebox(mapID) {
-    document.querySelector('.codebox').innerHTML = `mapID: ${mapID}`;
+    document.querySelector('.codebox').innerHTML = `mapName: ${mapID}`;
   }
 
   buildCountriesList(map){
@@ -153,6 +153,7 @@ class MapsConstructor{
     }
     return el
   }
+
   static getMapID(href){
     return href.split("mapdata/")[1].split('.')[0];
   }
