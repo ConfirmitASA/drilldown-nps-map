@@ -29,6 +29,13 @@ body{
 .main{
   flex:2
 }
+
+#multiSelect{
+  display: none;
+}
+#multiSelect button{
+  display: none;
+}
 li{
   display: block;
   list-style-type: none;
@@ -63,6 +70,9 @@ select,input{
   flex:none;
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 }
+.codebox span{
+  cursor: pointer;
+}
 table td,table th{
   line-height: 32px;
   vertical-align: middle;
@@ -77,10 +87,24 @@ tr>td:nth-child(2){
   background: #f0f2f5;
   font-family: Consolas, 'Liberation Mono', Menlo, Courier, monospace;
   color:red;
+  cursor: pointer;
 }
 #mapsList, .main{
   overflow-x:hidden;
   overflow-y: auto;
+}
+
+#tooltip {
+  position:absolute;
+  background:black;
+  color:white;
+  padding:4px;
+  z-index:10000;
+  border-radius:2px;
+  font-size:12px;
+  box-shadow:3px 3px 3px rgba(0,0,0,.4);
+  opacity:0;
+  transition:opacity 0.3s;
 }
 
 
