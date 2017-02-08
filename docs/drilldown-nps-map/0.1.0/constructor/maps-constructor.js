@@ -15,7 +15,9 @@ class MapsConstructor{
       this.countriesFilter = document.querySelector("#countriesFilter");
       this.mapsFilter = document.querySelector("#mapsFilter");
       this.processMap = this.processMap.bind(this);
-
+      document.querySelector('#btn-getIDs').addEventListener('click', function(e){
+        MapsConstructor.copyIDsToClipboard(e, 'IDsStorage');
+      });
       this.createMapSwitcher();
       this.initFiltering();
     });
@@ -113,29 +115,133 @@ class MapsConstructor{
     return link
   }
 
+  /**
+   * Copies selected countries IDs
+   * @param e - click event
+   */
+  static copyIDsToClipboard(e){
+    let ids = [];
+    document.querySelectorAll('#countriesList tbody tr').forEach(tr => {
+      let cb = tr.querySelector("input[type='checkbox']");
+      if(cb.checked){
+        ids.push(cb.value);
+      }
+    });
+    if(ids.length < 1)
+      return;
+    let t = document.querySelector('#IDsStorage');
+    t.value = JSON.stringify(ids);
+    t.style.display = "block";
+    MapsConstructor.copyTextEventHandler(e, 'IDsStorage');
+    t.style.display = "none";
+  }
+
+  displayMultiselect(multiselect){
+    multiselect.style.display = 'block';
+    multiselect.querySelector('#multiSelectCheckbox').checked = false;
+    multiselect.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
+    multiselect.querySelector('#multiSelectCheckbox').addEventListener('change', function () {
+      if(this.checked){
+        multiselect.querySelectorAll('button').forEach(btn => btn.style.display = 'inline-block');
+        document.querySelectorAll('#countriesList tbody tr').forEach(tr => {
+          tr.querySelector("input[type='checkbox']").style.display = 'table-cell';
+        });
+      } else {
+        multiselect.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
+        document.querySelectorAll('#countriesList tbody tr').forEach(tr => {
+          tr.querySelector("input[type='checkbox']").style.display = 'none';
+        });
+      }
+    });
+  }
+
   processMap(e){
     let map = this.currentSection.maps[e.target.value];
     let oMap = this.fakeXHR(map.js.href);
     oMap.then(mapJSON=>{
       this.clearCountriesList();
       this.constructor.updateCodebox(this.constructor.getMapID(map.js.href));
-      this.buildCountriesList(mapJSON)
+      this.buildCountriesList(mapJSON);
+      document.querySelector('#btn-deselect').onclick = function () {
+        document.querySelectorAll('#countriesList tbody tr').forEach(tr => {
+          tr.querySelector("input[type='checkbox']").checked = false;
+        });
+      };
+      this.displayMultiselect(document.querySelector('#multiSelect'));
     });
   }
 
+  /**
+   * Shows tooltip when, when text is copied to clipboard
+   * @param e
+   * @param text
+   */
+  static showTooltip(e, text){
+    let tooltip = document.createElement('div');
+    tooltip.innerHTML = text;
+    tooltip.id = 'tooltip';
+    document.body.appendChild(tooltip);
+    tooltip.style.left = e.pageX - 10 + 'px';
+    tooltip.style.top = e.pageY + 15 + 'px';
+    tooltip.style.opacity = 1;
+    setTimeout(function(){
+      tooltip.style.opacity = 0;
+      tooltip.remove();
+    }, 500)
+
+  }
+
+  /**
+   * Copies text to clipboard
+   * @param event
+   * @param id
+   */
+  static copyTextEventHandler(event, id){
+    let range = document.createRange();
+    let node;
+    window.getSelection().removeAllRanges();
+    if (id) {
+      node = document.getElementById(id);
+    }else{
+      node = event.target;
+    }
+    range.selectNode(node);
+    window.getSelection().addRange(range);
+    try {
+      let successful = document.execCommand('copy');
+      let msg = successful ? 'successful' : 'unsuccessful';
+      if (msg) {
+        MapsConstructor.showTooltip(event, "Copied to clipboard!");
+      } else {
+        MapsConstructor.showTooltip(event, "Copy failed!");
+      }
+    } catch(err) {
+      console.log(err);
+    }
+    window.getSelection().removeAllRanges();
+  }
+
   static updateCodebox(mapID) {
-    document.querySelector('.codebox').innerHTML = `mapName: ${mapID}`;
+    let codebox = document.querySelector('.codebox');
+    codebox.innerHTML = `mapName: <span>${mapID}</span>`;
+    codebox.querySelector('span').addEventListener('click', MapsConstructor.copyTextEventHandler);
   }
 
   buildCountriesList(map){
     let df = document.createDocumentFragment();
-
     map.features.forEach(feature=>{
       let p = feature.properties,
           row = MapsConstructor.createElement('tr');
       df.appendChild(row);
+      let cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = p['hc-key'];
+      cb.style.display = 'none';
       row.appendChild(MapsConstructor.createElement('td',p['name']));
-      row.appendChild(MapsConstructor.createElement('td',p['hc-key']));
+      row.firstChild.insertBefore(cb,row.firstChild.firstChild);
+      let key = MapsConstructor.createElement('td',p['hc-key'])
+      row.appendChild(key);
+      key.addEventListener('click', MapsConstructor.copyTextEventHandler);
       row.appendChild(MapsConstructor.createElement('td',p['subregion']));
       row.appendChild(MapsConstructor.createElement('td',p['region-wb']));
     });
@@ -160,7 +266,7 @@ class MapsConstructor{
 
   fakeXHR(url){
     let mapID = this.constructor.getMapID(url),
-      hm=this.hm;
+        hm=this.hm;
     return new Promise((resolve,reject)=>{
       if(!this.hm[mapID]){
         let script = document.createElement('script'),
