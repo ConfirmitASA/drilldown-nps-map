@@ -311,9 +311,9 @@ class DrilldownMap extends MapHierarchy {
                 return this.series.name
             }
           },
-          /*tooltip: {
-           pointFormat: 'NPS : {point.value}'
-           },*/
+          tooltip: {
+           pointFormat: this.getTooltip()
+           },
           color     : DrilldownMap.computeColor(this.colorFn, DrilldownMap.getPrimaryValue(subcell, this.valueColumn), target),
           allAreas  : false,
           parent    : subcell.parent.text,
