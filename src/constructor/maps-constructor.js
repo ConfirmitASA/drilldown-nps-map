@@ -130,7 +130,7 @@ class MapsConstructor{
     if(ids.length < 1)
       return;
     let t = document.querySelector('#IDsStorage');
-    t.value = JSON.stringify(ids);
+    t.value = ids.join();
     t.style.display = "block";
     MapsConstructor.copyTextEventHandler(e, 'IDsStorage');
     t.style.display = "none";
