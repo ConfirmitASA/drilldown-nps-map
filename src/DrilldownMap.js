@@ -79,8 +79,7 @@ class DrilldownMap extends MapHierarchy {
     if (typeof Highcharts.maps == undefined) {
       throw new Error('HighMaps must be loaded. Probably they are missing')
     }
-    //
-    //this.drawMap(rowheaders, containerID, initMap, config);
+    this.drawMap(rowheaders, containerID, initMap, config);
   }
 
   /**
