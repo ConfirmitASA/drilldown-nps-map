@@ -120,8 +120,6 @@ export default class MapHierarchy {
     return flatHierarchy;
   }
 
-
-
   /**
    * Updates initial hierarchy
    * @param hierarchy

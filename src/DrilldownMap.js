@@ -203,17 +203,11 @@ export default class DrilldownMap {
             let curLVL = This.curLVL;
             if (curLVL) {
               chart.showLoading(This.loadingText);
-              let table = This.childTable.then(table => {
-                // parse data loaded from table
-                This.parseTableData({
-                  source: table,
-                  excludeRows: 0,
-                  rowheaders: curLVL.subcells.map(lvl => lvl.id),
-                });
+              This.fetchChildData(()=>{
                 This.updateMap(curLVL, chart, e);
                 chart.subtitle.update({text: This.subtitle});
                 chart.hideLoading();
-              });
+              })
             }
           },
           drillupall: function (e) {
@@ -231,8 +225,22 @@ export default class DrilldownMap {
     };
   }
 
-  get childTable() {
-    return AsyncHierarchyTable.fetchChildTable(this.curLVL.id, this.curLVL.parent ? this.curLVL.parent.id : null, this.tableID, this.pageStateId)
+  /**
+   * This function fetches childTable and parses its data by appending it to `._data` in `hierarchy` nodes.
+   * You may override this method but make sure you execute a callback passed as its parameter
+   * */
+  fetchChildData(callback) {
+    const {id,parent,subcells} = this.curLVL;
+    return AsyncHierarchyTable.fetchChildTable(id, parent ? parent.id : null, this.tableID, this.pageStateId)
+      .then(table => {
+      // parse data loaded from table
+      this.parseTableData({
+        source: table,
+        excludeRows: 0,
+        rowheaders: subcells.map(lvl => lvl.id),
+      });
+      callback && typeof callback==='function' && callback()
+    })
   }
 
   /**
