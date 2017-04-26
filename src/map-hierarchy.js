@@ -2,19 +2,54 @@
  * Created by IvanP on 26.12.2016.
  */
 export default class MapHierarchy {
-  constructor(flatHierarchy, normals = {}, normalsSeparator = ',') {
-    this.flatHierarchy = flatHierarchy;
-    this.normals = normals;
-    this.normalsSeparator = normalsSeparator;
-    this.hierarchy = this.processHierarchy();
+  constructor(config) {
+    this.declareGlobals(config,{
+        normals: {},
+        normalsSeparator: ',',
+      },
+      this.typeCheck(config)
+    );
+
+    if(this.flatHierarchy && !this.hierarchy){
+      this.hierarchy=this.composeTreeHierarchy();
+    } else if(!this.flatHierarchy && this.hierarchy){
+      this.flatHierarchy = this.composeFlatHierarchy()
+    }
     this.addMapIDsToHierarchyLevel();
-    return this.hierarchy
+    return {hierarchy:this.hierarchy, flatHierarchy:this.flatHierarchy}
+  }
+
+  declareGlobals(config, defaults = {}, typeCheck = {}) {
+    const mixedOptions = {...config, ...defaults};
+    Object.keys(mixedOptions).forEach(key => {
+      if (typeCheck[key] && typeof typeCheck[key] === 'function') typeCheck[key](mixedOptions[key]);
+      this[key] = mixedOptions[key];
+    })
+  }
+
+  typeCheck(opts){
+    if(opts.flatHierarchy){
+      if(typeof opts.flatHierarchy !== 'object') throw new TypeError('"flatHierarchy" must be an Object but it is a '+ typeof opts.flatHierarchy);
+      if(Object.keys(opts.flatHierarchy).length===0) console.error('flatHierarchy has no nodes in it');
+    }
+
+    if(opts.hierarchy){
+      if(!Array.isArray(opts.hierarchy)) throw new TypeError('"hierarchy" must be an Array but it is a '+ typeof opts.hierarchy);
+      if(opts.hierarchy.length===0) console.error('hierarchy has no nodes in it');
+    }
+
+    if(!opts.flatHierarchy && !opts.hierarchy)
+      throw new Error('either "flatHierarchy" or "hierarchy" must be passed for map to work');
+
+    return {
+      normalsSeparator: function(){if(typeof opts.normalsSeparator !== 'string') throw new TypeError('"normalsSeparator" must be an String but it is a '+ typeof opts.normalsSeparator)}
+    }
   }
 
   /**
    * Processes hierarchy array by assigning parent-child relations and returning those that don't have a parent
    * */
-  processHierarchy() {
+  composeTreeHierarchy() {
     let orphanItems = [];
     for (let key in this.flatHierarchy) {
       let item = this.flatHierarchy[key];
@@ -74,15 +109,15 @@ export default class MapHierarchy {
     return Object.keys(this.normals).length > 0;
   }
 
-  static composeFlatHierarchy(hierarchy, normals) {
-    let o = {};
-    let toNormalize = normals.keys().length > 0;
-    hierarchy.forEach(
+  composeFlatHierarchy() {
+    let flatHierarchy = {};
+    const shouldNormalize = this.shouldNormalize;
+    this.hierarchy.forEach(
       item => {
-        if (toNormalize) MapHierarchy.normalize(item, normals);
-        o[item.id] = item;
+        if (shouldNormalize) this.normalize(item);
+        flatHierarchy[item.id] = item;
       });
-    return o;
+    return flatHierarchy;
   }
 
 

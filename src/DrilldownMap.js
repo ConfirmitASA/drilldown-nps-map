@@ -1,5 +1,4 @@
 require("./drilldown-map.css");
-import ReportalBase from "r-reportal-base";
 import AsyncHierarchyTable from "r-async-hierarchy-table";
 import MapHierarchy from "./map-hierarchy";
 import AggregatedTable from "r-aggregated-table";
@@ -36,12 +35,6 @@ export default class DrilldownMap {
    * @param {Object} [config.loadingText= 'fetching data'] - text to show when loading another level
    * */
   constructor(config = {}) {
-    const {
-      flatHierarchy,
-      normals,
-      normalsSeparator,
-    } = config;
-
     this.declareGlobals(config, {
       initialMap: 'custom/world-highres2',
       valueColumn: 1,
@@ -54,7 +47,15 @@ export default class DrilldownMap {
       options: {},
     }, this.typeCheck(config));
 
-    this.hierarchy = new MapHierarchy(flatHierarchy, normals, normalsSeparator);
+    const {hierarchy,flatHierarchy} = new MapHierarchy({
+      flatHierarchy:this.flatHierarchy,
+      hierarchy:this.hierarchy,
+      normals:this.normals,
+      normalsSeparator:this.normalsSeparator
+    });
+
+    this.flatHierarchy = flatHierarchy;
+    this.hierarchy = hierarchy;
 
     this.parseTableData();
 
@@ -330,7 +331,6 @@ export default class DrilldownMap {
 
   /**
    * Get series for the first time map initialization
-   * @param {Object} curLVL - current level in hierarchy
    * @param {Array} [series=[]] - series
    * @returns {Array}
    * */
@@ -351,9 +351,13 @@ export default class DrilldownMap {
    * */
   static loadMap(source) {
     return new Promise((resolve, reject) => {
-      jQuery.getScript('https://code.highcharts.com/mapdata/' + source + '.js', function () {
-        resolve(Highcharts.maps[source]);
-      });
+      try{
+        jQuery.getScript('https://code.highcharts.com/mapdata/' + source + '.js', function () {
+          resolve(Highcharts.maps[source]);
+        });
+      } catch(error){
+        reject(error)
+      }
     });
   }
 
