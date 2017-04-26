@@ -1,47 +1,31 @@
 /**
  * Created by IvanP on 26.12.2016.
  */
-class MapHierarchy {
-  constructor(hierarchy,normals,normalsSeparator){
-    this.flatHierarchy = hierarchy;
-    this.hierarchy = this.constructor.processHierarchy(this.flatHierarchy,normals,normalsSeparator);
-    this.constructor.addMapIDsToHierarchyLevel(this.hierarchy);
+export default class MapHierarchy {
+  constructor(flatHierarchy, normals = {}, normalsSeparator = ',') {
+    this.flatHierarchy = flatHierarchy;
+    this.normals = normals;
+    this.normalsSeparator = normalsSeparator;
+    this.hierarchy = this.processHierarchy();
+    this.addMapIDsToHierarchyLevel();
+    return this.hierarchy
   }
 
   /**
    * Processes hierarchy array by assigning parent-child relations and returning those that don't have a parent
-   * @param {Object} flatHierarchy - a flat hierarchy object with ids as keys
-   * @param {Object} [normals={}] - an object where keys myst coincide with column ids (thus be identical to keys in `item`). `normals` doesn't require for all keys from `item` to be present, only those that need to be normalised to a different type
-   * @param {String} [separator=','] - a separator array items are serialized with, by default it's a comma (`,`)
    * */
-  static processHierarchy(flatHierarchy,normals={},separator=','){
-    let orphans = [],
-        toNormalize = Object.keys(normals).length>0;
-    for(let key in flatHierarchy){
-      let item = flatHierarchy[key];
-      if(toNormalize)MapHierarchy.normalize(item,normals);
-
-      // map item to parent
-      if(item.parent && item.parent!=null && item.parent.length>0){
-        item.parent = flatHierarchy[item.parent];
-        item.parent.subcells = item.parent.subcells || [];
-        item.parent.subcells.push(item);
+  processHierarchy() {
+    let orphanItems = [];
+    for (let key in this.flatHierarchy) {
+      let item = this.flatHierarchy[key];
+      this.normalize(item);
+      if (this._itemHasParent(item)) {
+        this._assignParentToItem(item);
       } else {
-        orphans.push(item);
+        orphanItems.push(item);
       }
     }
-    return orphans
-  }
-
-  static composeFlatHierarchy(hierarchy,normals){
-    let o={};
-    let toNormalize = normals.keys().length>0;
-    hierarchy.forEach(
-      item=>{
-        if(toNormalize)MapHierarchy.normalize(item,normals);
-        o[item.id]=item;
-      });
-    return o;
+    return orphanItems
   }
 
   /**
@@ -53,27 +37,54 @@ class MapHierarchy {
    * - `boolean` - parses the string as a Boolean, case insensitive
    *
    * @param {Object} item - item to match contents against `normals`
-   * @param {Object} [normals={}] - an object where keys myst coincide with column ids (thus be identical to keys in `item`). `normals` doesn't require for all keys from `item` to be present, only those that need to be normalised to a different type
-   * @param {String} [separator=','] - a separator array items are serialized with, by default it's a comma (`,`)
    * */
-  static normalize(item,normals={},separator=','){
-    let parser = {
-      stringArray: val => val.split(separator),
-      numberArray: val => val.split(separator).map(i=>parseFloat(i)),
-      string: val => val.trim(),
-      number: val => val!=null && !isNaN(parseFloat(val))? parseFloat(val): null,
-      boolean: val => val.toLowerCase()=="true" || val=="1"
-    };
-    for(let normal in normals){
-      if(item[normal]){// property exists in object
-        if(item[normal].length>0){
-          item[normal] = parser[normals[normal]](item[normal])
-        } else {
-          delete item[normal]
+  normalize(item) {
+    if (this.shouldNormalize) {
+      let parser = {
+        stringArray: val => val.split(this.normalsSeparator),
+        numberArray: val => val.split(this.normalsSeparator).map(i => parseFloat(i)),
+        string: val => val.trim(),
+        number: val => val !== null && !isNaN(parseFloat(val)) ? parseFloat(val) : null,
+        boolean: val => val.toLowerCase() === "true" || val === "1"
+      };
+
+      for (let normal in this.normals) {
+        if (item[normal]) {// property exists in object
+          if (item[normal].length > 0) {
+            item[normal] = parser[this.normals[normal]](item[normal])
+          } else {
+            delete item[normal]
+          }
         }
       }
     }
   }
+
+  _itemHasParent(item){
+    return item.parent && item.parent !== null && item.parent.length > 0
+  }
+
+  _assignParentToItem(item){
+    item.parent = this.flatHierarchy[item.parent];
+    item.parent.subcells = item.parent.subcells || [];
+    item.parent.subcells.push(item);
+  }
+
+  get shouldNormalize() {
+    return Object.keys(this.normals).length > 0;
+  }
+
+  static composeFlatHierarchy(hierarchy, normals) {
+    let o = {};
+    let toNormalize = normals.keys().length > 0;
+    hierarchy.forEach(
+      item => {
+        if (toNormalize) MapHierarchy.normalize(item, normals);
+        o[item.id] = item;
+      });
+    return o;
+  }
+
 
 
   /**
@@ -81,21 +92,30 @@ class MapHierarchy {
    * @param hierarchy
    * @param parent - hierarchy level parent
    */
-  static addMapIDsToHierarchyLevel(hierarchy, parent = null) {
+  addMapIDsToHierarchyLevel(hierarchy=this.hierarchy, parent = null) {
     hierarchy.forEach(subcell => {
-      if(subcell.parent && subcell.parent!=null && subcell.parent.mapName){
-        subcell.mapName = subcell.parent.mapName;
-      }
+      this.inheritMapName(subcell);
       if (subcell.subcells) {
-        MapHierarchy.addMapIDsToHierarchyLevel(subcell.subcells, subcell);
+        this.addMapIDsToHierarchyLevel(subcell.subcells, subcell);
       }
-      if(subcell.parent && subcell.mapID && !subcell.parent.mapName){
-        if(!subcell.parent.mapID)
-          subcell.parent.mapID = [];
-        subcell.parent.mapID = subcell.parent.mapID.concat(subcell.mapID);
-      }
+      this.bubbleMapId(subcell);
     });
   }
 
+  inheritMapName(item){
+    if (this.parentHasMapName(item)) {
+      item.mapName = item.parent.mapName;
+    }
+  }
+
+  bubbleMapId(item){
+    if (item.parent && item.mapID && !item.parent.mapName) {
+      if (!item.parent.mapID) item.parent.mapID = [];
+      item.parent.mapID = item.parent.mapID.concat(item.mapID);
+    }
+  }
+
+  parentHasMapName(item){
+    return item.parent && item.parent !== null && item.parent.mapName
+  }
 }
-export default MapHierarchy

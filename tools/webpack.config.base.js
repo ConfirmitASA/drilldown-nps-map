@@ -8,14 +8,11 @@ module.exports = {
   },
   output: {
     path: "./dist",
-    filename: "[name].js"
+    filename: "[name].js",
+    libraryTarget: 'umd'
   },
   module: {
-    loaders: [{
-      test: /\.js$/,
-      exclude: /(bower_components)/,
-      loader: 'babel',
-    }],
+    loaders: [],
   },
   resolve: {
     extensions: [
